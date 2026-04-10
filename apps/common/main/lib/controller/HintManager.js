@@ -118,6 +118,7 @@ Common.UI.HintManager = new(function() {
         _isEditDiagram = false,
         _isInternalEditorLoading = true,
         _usedTitles = [],
+        _isProcessingHint = false,
         _appPrefix,
         _staticHints = { // for 0 level
             // "btnhome": 'K'
@@ -136,6 +137,12 @@ Common.UI.HintManager = new(function() {
         if (btn === 'esc') {
             if (_currentLevel === 0) {
                 _currentSection = document;
+            } else {
+                // Close any open dropdown menu when escaping from menu-level hints
+                var openGroup = $('.btn-group.open');
+                if (openGroup.length > 0) {
+                    openGroup.find('[data-toggle=dropdown]').trigger(jQuery.Event('click', {which: 1}));
+                }
             }
             return;
         }
@@ -144,7 +151,13 @@ Common.UI.HintManager = new(function() {
         } else if ($('#file-menu-panel').is(':visible')) {
             _currentSection = $('#file-menu-panel');
         } else {
-            _currentSection = (btn && btn.closest('.hint-section')) || document;
+            // Check if a dropdown menu is open within the button's btn-group
+            var openMenu = btn && btn.closest('.btn-group.open').find('.dropdown-menu:visible');
+            if (openMenu && openMenu.length > 0) {
+                _currentSection = openMenu;
+            } else {
+                _currentSection = (btn && btn.closest('.hint-section')) || document;
+            }
         }
     };
 
@@ -247,9 +260,32 @@ Common.UI.HintManager = new(function() {
         return (item.hasClass('disabled') || item.parent().hasClass('disabled') || item.attr('disabled'));
     };
 
+    var _isDropdownMenu = function () {
+        return _currentSection && $(_currentSection).hasClass && $(_currentSection).hasClass('dropdown-menu');
+    };
+
+    var _assignMenuItemHints = function () {
+        if (!_isDropdownMenu()) return;
+        $(_currentSection).find('li:not(.divider)').each(function () {
+            var $a = $(this).find('> a.menu-item');
+            if ($a.length > 0 && !$a.attr('data-hint')) {
+                $a.attr('data-hint', _currentLevel);
+            }
+            if ($a.length > 0) {
+                if (!$a.attr('data-hint-direction')) {
+                    $a.attr('data-hint-direction', 'left-top');
+                }
+                if (!$a.attr('data-hint-offset')) {
+                    $a.attr('data-hint-offset', '6, 4');
+                }
+            }
+        });
+    };
+
     var _getControls = function() {
         _currentControls = [];
         _usedTitles = [];
+        _assignMenuItemHints();
         var arr = [],
             itemsWithTitle = [],
             itemsWithStaticTitle = [];
@@ -316,6 +352,12 @@ Common.UI.HintManager = new(function() {
                     i;
                 if (_usedLetters.indexOf(ind) < 0)
                     _usedLetters.push(ind);
+                // Also reserve additional letters in multi-character titles
+                for (i = 1; i < title.length; i++) {
+                    var extraInd = _arrEnAlphabet.indexOf(title.charAt(i));
+                    if (extraInd >= 0 && _usedLetters.indexOf(extraInd) < 0)
+                        _usedLetters.push(extraInd);
+                }
                 if (_lang === 'en') {
                     el.attr('data-hint-title-lang', title.toUpperCase());
                 } else {
@@ -498,7 +540,9 @@ Common.UI.HintManager = new(function() {
             _clearHints();
         });
         $(document).on('mousedown', function () {
-            _clearHints();
+            if (!_isProcessingHint) {
+                _clearHints();
+            }
         });
         $(document).on('keyup', function(e) {
             if ((e.keyCode == Common.UI.Keys.ALT || e.keyCode === 91) && _needShow && !(window.SSE && window.SSE.getController('Statusbar').getIsDragDrop())) {
@@ -521,6 +565,64 @@ Common.UI.HintManager = new(function() {
             }
             _needShow = false;
         });
+        // Capture-phase listener to intercept keydown before Bootstrap's dropdown handler
+        // can stopPropagation. When hints are visible in a dropdown menu, we handle the
+        // event here and prevent it from reaching Bootstrap.
+        document.addEventListener('keydown', function(e) {
+            if (_hintVisible && _isDropdownMenu()) {
+                e.stopPropagation();
+                e.preventDefault();
+                if (e.keyCode == Common.UI.Keys.ESC) {
+                    _hideHints();
+                    Common.UI.Menu.Manager.hideAll();
+                    _prevLevel();
+                    _setCurrentSection('esc');
+                    _showHints();
+                    return;
+                }
+                var curLetter = null;
+                var keyCode = e.keyCode;
+                if (keyCode !== 16 && keyCode !== 17 && keyCode !== 18 && keyCode !== 91) {
+                    curLetter = _lang === 'en' ?
+                        ((keyCode > 47 && keyCode < 58 || keyCode > 64 && keyCode < 91) ? String.fromCharCode(keyCode) : null) :
+                        (/[.*+?^${}()|[\]\\]/g.test(e.key) ? null : e.key);
+                }
+                if (curLetter) {
+                    if (_lang !== 'en' && _arrAlphabet.indexOf(curLetter.toLowerCase()) === -1) {
+                        var ind = _arrEnQwerty.indexOf(curLetter.toLowerCase());
+                        if (ind !== -1) {
+                            curLetter = _arrQwerty[ind];
+                        }
+                    }
+                    _inputLetters = _inputLetters + curLetter.toUpperCase();
+                    var curr, match = false;
+                    for (var i = 0; i < _currentControls.length; i++) {
+                        var item = _currentControls[i];
+                        if (!_isItemDisabled(item)) {
+                            var title = item.attr('data-hint-title-lang'),
+                                regExp = new RegExp('^' + _inputLetters + '');
+                            if (regExp.test(title)) {
+                                match = true;
+                            }
+                            if (title === _inputLetters) {
+                                curr = item;
+                                break;
+                            }
+                        }
+                    }
+                    if (curr) {
+                        _hideHints();
+                        curr.trigger(jQuery.Event('click', {which: 1}));
+                        Common.UI.Menu.Manager.hideAll();
+                        _resetToDefault();
+                        _lockedKeyEvents(false);
+                    } else if (!match) {
+                        _inputLetters = '';
+                    }
+                }
+            }
+        }, true);
+
         $(document).on('keydown', function(e) {
             if (_hintVisible) {
                 e.preventDefault();
@@ -584,6 +686,12 @@ Common.UI.HintManager = new(function() {
                                 _hideHints();
                                 curr.focus();
                                 _resetToDefault();
+                            } else if (curr.hasClass('menu-item') || curr.closest('.dropdown-menu').length > 0) {
+                                _hideHints();
+                                curr.trigger(jQuery.Event('click', {which: 1}));
+                                Common.UI.Menu.Manager.hideAll();
+                                _resetToDefault();
+                                _lockedKeyEvents(false);
                             } else {
                                 _isComplete = false;
                                 _hideHints();
@@ -600,7 +708,9 @@ Common.UI.HintManager = new(function() {
                                         if (curr.attr('for')) { // to trigger event in checkbox
                                             $('#' + curr.attr('for')).trigger(jQuery.Event('click', {which: 1}));
                                         } else {
+                                            _isProcessingHint = true;
                                             curr.trigger(jQuery.Event('click', {which: 1}));
+                                            _isProcessingHint = false;
                                             if (needOpenPanel)
                                                 _isComplete = false; // to show next level of hints
                                         }

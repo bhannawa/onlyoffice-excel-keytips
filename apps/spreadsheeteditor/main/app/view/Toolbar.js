@@ -1006,9 +1006,7 @@ define([
                     cls         : 'btn-toolbar',
                     iconCls     : 'toolbar__icon btn-bold',
                     lock        : [_set.selImage, _set.editFormula, _set.selRangeEdit, _set.selSlicer, _set.coAuth, _set.coAuthText, _set.lostConnect, _set.wsLockFormat, _set.userProtected],
-                    enableToggle: true,
-                    dataHint    : '1',
-                    dataHintDirection: 'bottom'
+                    enableToggle: true
                 });
                 me.shortcutHints.Bold = {
                     btn: me.btnBold,
@@ -1020,9 +1018,7 @@ define([
                     cls         : 'btn-toolbar',
                     iconCls     : 'toolbar__icon btn-italic',
                     lock        : [_set.selImage, _set.editFormula, _set.selRangeEdit, _set.selSlicer, _set.coAuth, _set.coAuthText, _set.lostConnect, _set.wsLockFormat, _set.userProtected],
-                    enableToggle: true,
-                    dataHint    : '1',
-                    dataHintDirection: 'bottom'
+                    enableToggle: true
                 });
                 me.shortcutHints.Italic = {
                     btn: me.btnItalic,
@@ -1034,9 +1030,7 @@ define([
                     cls         : 'btn-toolbar',
                     iconCls     : 'toolbar__icon btn-underline',
                     lock        : [_set.selImage, _set.editFormula, _set.selRangeEdit, _set.selSlicer, _set.coAuth, _set.coAuthText, _set.lostConnect, _set.wsLockFormat, _set.userProtected],
-                    enableToggle: true,
-                    dataHint    : '1',
-                    dataHintDirection: 'bottom'
+                    enableToggle: true
                 });
                 me.shortcutHints.Underline = {
                     btn: me.btnUnderline,
@@ -1219,29 +1213,38 @@ define([
                             {
                                 caption : me.txtMergeCenter,
                                 iconCls     : 'menu__icon btn-merge-and-center',
-                                value   : Asc.c_oAscMergeOptions.MergeCenter
+                                value   : Asc.c_oAscMergeOptions.MergeCenter,
+                                dataHint: '2',
+                                dataHintTitle: 'C'
                             },
                             {
                                 caption : me.txtMergeAcross,
                                 iconCls     : 'menu__icon btn-merge-across',
-                                value   : Asc.c_oAscMergeOptions.MergeAcross
+                                value   : Asc.c_oAscMergeOptions.MergeAcross,
+                                dataHint: '2',
+                                dataHintTitle: 'A'
                             },
                             {
                                 caption : me.txtMergeCells,
                                 iconCls     : 'menu__icon btn-merge-cells',
-                                value   : Asc.c_oAscMergeOptions.Merge
+                                value   : Asc.c_oAscMergeOptions.Merge,
+                                dataHint: '2',
+                                dataHintTitle: 'C'
                             },
                             {
                                 caption : me.txtUnmerge,
                                 iconCls     : 'menu__icon btn-unmerge-cells',
-                                value   : Asc.c_oAscMergeOptions.None
+                                value   : Asc.c_oAscMergeOptions.None,
+                                dataHint: '2',
+                                dataHintTitle: 'U'
                             }
                         ]
                     }),
                     action: 'cell-merge',
                     dataHint    : '1',
                     dataHintDirection: 'bottom',
-                    dataHintOffset: '0, -16'
+                    dataHintOffset: '0, -16',
+                    dataHintTitle: 'M'
                 });
 
                 me.btnAlignTop = new Common.UI.Button({
@@ -1903,18 +1906,23 @@ define([
                             },
                             {
                                 caption : me.textEntireRow,
-                                value   : Asc.c_oAscInsertOptions.InsertRows
+                                value   : Asc.c_oAscInsertOptions.InsertRows,
+                                dataHint: '2',
+                                dataHintTitle: 'R'
                             },
                             {
                                 caption : me.textEntireCol,
-                                value   : Asc.c_oAscInsertOptions.InsertColumns
+                                value   : Asc.c_oAscInsertOptions.InsertColumns,
+                                dataHint: '2',
+                                dataHintTitle: 'C'
                             }
                         ]
                     }),
                     action: 'add-cell',
                     dataHint: '1',
                     dataHintDirection: 'top',
-                    dataHintOffset: '0, -6'
+                    dataHintOffset: '0, -6',
+                    dataHintTitle: "I"
                 });
                 me.shortcutHints.OpenInsertCellsWindow = {
                     btn: me.btnAddCell,
@@ -1940,18 +1948,23 @@ define([
                             },
                             {
                                 caption : me.textEntireRow,
-                                value   : Asc.c_oAscDeleteOptions.DeleteRows
+                                value   : Asc.c_oAscDeleteOptions.DeleteRows,
+                                dataHint: '2',
+                                dataHintTitle: 'R'
                             },
                             {
                                 caption : me.textEntireCol,
-                                value   : Asc.c_oAscDeleteOptions.DeleteColumns
+                                value   : Asc.c_oAscDeleteOptions.DeleteColumns,
+                                dataHint: '2',
+                                dataHintTitle: 'C'
                             }
                         ]
                     }),
                     action: 'delete-cell',
                     dataHint: '1',
                     dataHintDirection: 'bottom',
-                    dataHintOffset: '0, -6'
+                    dataHintOffset: '0, -6',
+                    dataHintTitle: "D"
                 });
                 me.shortcutHints.OpenDeleteCellsWindow = {
                     btn: me.btnDeleteCell,

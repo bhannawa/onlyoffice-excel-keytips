@@ -25,6 +25,8 @@ apps/**/main/resources/**/iconshuge*.svg
 apps/**/mobile/dist/*.*
 apps/**/mobile/hot/*.*
 apps/**/mobile/css/*.*
+apps/spreadsheeteditor/mobile/dist
+apps/spreadsheeteditor/mobile/index.html
 
 
 # test documents
